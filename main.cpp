@@ -348,7 +348,7 @@ void DrawShip(Ship ship)
         int positionX = GRID_OFFSET_X + (int)(ship.positions[i].x * BLOCK_SIZE) + BLOCK_SIZE / 4;
         int positionY = GRID_OFFSET_Y + (int)(ship.positions[i].y * BLOCK_SIZE) + BLOCK_SIZE / 4;
 
-        DrawRectangle(positionX, positionY, BLOCK_SIZE / 2, BLOCK_SIZE / 2, DARKGRAY);
+        DrawRectangle(positionX, positionY, BLOCK_SIZE / 2, BLOCK_SIZE / 2, GRAY);
     }
 }
 
