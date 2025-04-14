@@ -4,6 +4,39 @@
 #include <cstdlib>
 #include <ctime>
 
+// Structs and Types
+enum GameState
+{
+    HOME,
+    PLAYING
+};
+GameState gameState = HOME;
+
+enum ShipType
+{
+    CARRIER,
+    BATTLESHIP,
+    CRUISER,
+    DESTROYER,
+    SUBMARINE
+};
+struct Ship
+{
+    ShipType type;
+    int size;
+    bool isHorizontal;
+    Vector2 *positions;
+};
+struct Fleet
+{
+    Ship carriers[5];
+    Ship battleships[4];
+    Ship cruisers[3];
+    Ship destroyers[2];
+    Ship submarines[1];
+};
+Fleet fleet;
+
 Font font;
 
 // Grid
@@ -29,39 +62,6 @@ float gameTime = 0.0f;
 // Background textures
 Texture2D seaBackground;
 Texture2D battleshipBackground;
-
-// Structs and Types
-enum GameState
-{
-    HOME,
-    PLAYING
-};
-GameState gameState = HOME;
-
-enum ShipType
-{
-    CARRIER,
-    BATTLESHIP,
-    CRUISER,
-    DESTROYER,
-    SUBMARINE
-};
-struct Ship
-{
-    ShipType shipType;
-    int size;
-    bool isHorizontal;
-    Vector2 positions[];
-};
-struct Fleet
-{
-    Ship carriers[5];
-    Ship battleship[4];
-    Ship cruiser[3];
-    Ship destroyer[2];
-    Ship submarine[1];
-};
-
 // Declarations
 void UpdateGame(void);
 void DrawGrid(void);
@@ -77,7 +77,7 @@ int main(void)
 
     SetTargetFPS(60);
 
-    seaBackground = LoadTexture("resources/seaBackground.jpeg");
+    seaBackground = LoadTexture("resources/seeaBackground.jpeg");
     battleshipBackground = LoadTexture("resources/battleshipBackground.jpeg");
 
     font = LoadFontEx("resources/font.ttf", 96, 0, 0);
@@ -115,18 +115,120 @@ int main(void)
 // Ships
 Ship newCarrier(void)
 {
+    Ship ship;
+    ship.size = 5;
+    ship.type = CARRIER;
+    ship.isHorizontal = true;
+
+    // pa = position array
+    Vector2 pa[5];
+    pa[0] = (Vector2){(float)GetRandomValue(0, 10)};
+    pa[1] = (Vector2){};
+    pa[2] = (Vector2){};
+    pa[3] = (Vector2){};
+    pa[4] = (Vector2){};
+
+    ship.positions = pa;
+
+    return ship;
 }
 Ship newBattleship(void)
 {
+    Ship ship;
+    ship.size = 4;
+    ship.type = BATTLESHIP;
+    ship.isHorizontal = true;
+
+    Vector2 pa[4];
+    pa[0] = (Vector2){(float)GetRandomValue(0, 10)};
+    pa[1] = (Vector2){};
+    pa[2] = (Vector2){};
+    pa[3] = (Vector2){};
+
+    ship.positions = pa;
+
+    return ship;
 }
 Ship newCruiser(void)
 {
+    Ship ship;
+    ship.size = 3;
+    ship.type = CRUISER;
+    ship.isHorizontal = true;
+
+    Vector2 pa[3];
+    pa[0] = (Vector2){(float)GetRandomValue(0, 10)};
+    pa[1] = (Vector2){};
+    pa[2] = (Vector2){};
+
+    ship.positions = pa;
+
+    return ship;
 }
 Ship newDestroyer(void)
 {
+    Ship ship;
+    ship.size = 2;
+    ship.type = DESTROYER;
+    ship.isHorizontal = true;
+
+    Vector2 *pa = new Vector2[2];
+    // Vector2 pa[2];
+    float x = (float)GetRandomValue(0, 10);
+    float y = (float)GetRandomValue(0, 10);
+
+    pa[0] = (Vector2){x, y};
+    pa[1] = (Vector2){x, y - 1};
+
+    ship.positions = pa;
+
+    return ship;
 }
 Ship newSubmarine(void)
 {
+    Ship ship;
+    ship.size = 1;
+    ship.type = SUBMARINE;
+    ship.isHorizontal = true;
+
+    Vector2 pa[1];
+    pa[0] = (Vector2){(float)GetRandomValue(0, 10)};
+
+    ship.positions = pa;
+
+    return ship;
+}
+void newFleet(void)
+{
+    Ship destroyer = newDestroyer();
+    fleet.destroyers[0] = destroyer;
+}
+
+void UpdateGame(void)
+{
+    // if (IsKeyPressed(KEY_T))
+    // {
+    //     isDarkBackground = !isDarkBackground;
+    // }
+    if (IsKeyPressed(KEY_G))
+    {
+        showGrid = !showGrid;
+    }
+    if (gameState == HOME)
+    {
+        newFleet();
+    }
+}
+
+void DrawShip(Ship ship)
+{
+    for (int i = 0; i < ship.size; i++)
+    {
+        int positionX = GRID_OFFSET_X + ship.positions[i].x * BLOCK_SIZE;
+        int positionY = GRID_OFFSET_Y + ship.positions[i].y * BLOCK_SIZE;
+
+        DrawRectangle(positionX, positionY, BLOCK_SIZE, BLOCK_SIZE, WHITE);
+    }
 }
 
 // Grid
@@ -179,18 +281,6 @@ void DrawGrid(void)
     }
 }
 
-void UpdateGame(void)
-{
-    // if (IsKeyPressed(KEY_T))
-    // {
-    //     isDarkBackground = !isDarkBackground;
-    // }
-    if (IsKeyPressed(KEY_G))
-    {
-        showGrid = !showGrid;
-    }
-}
-
 void DrawGame(float gameTime)
 {
     BeginDrawing();
@@ -226,6 +316,7 @@ void DrawGame(float gameTime)
         // ClearBackground(Fade(BLUE, 0.1f));
         ClearBackground(BLUE);
         DrawGrid();
+        DrawShip(fleet.destroyers[0]);
         break;
     }
     }
