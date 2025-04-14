@@ -69,6 +69,9 @@ void DrawGrid(void);
 void DrawGame(float gameTime);
 void UnloadGame(void);
 void DrawShip(Ship ship);
+bool canPlaceShip(Ship ship);
+void placeShip(Ship ship);
+void newFleet();
 
 int main(void)
 {
@@ -94,6 +97,7 @@ int main(void)
             if (IsKeyPressed(KEY_SPACE))
             {
                 gameState = PLAYING;
+                newFleet();
             }
             break;
         }
@@ -114,7 +118,49 @@ int main(void)
     return 0;
 }
 
-// Ships
+// Ships functions
+bool canPlaceShip(Ship ship)
+{
+    for (int i = 0; i < ship.size; i++)
+    {
+        int x = (int)ship.positions[i].x;
+        int y = (int)ship.positions[i].y;
+        // Check bounds and occupancy
+        if (x < 0 || x >= GRID_HORIZONTAL_SIZE || y < 0 || y >= GRID_VERTICAL_SIZE || grid[y][x] != 0)
+        {
+            return false;
+        }
+        for (int dy = -1; dy <= 1; dy++)
+        {
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                if (dx == 0 && dy == 0) // Skip the ship's own position
+                {
+                    continue;
+                }
+                int nx = x + dx;
+                int ny = y + dy;
+                // Check if neighbor is within bounds and occupied
+                if (nx >= 0 && nx < GRID_HORIZONTAL_SIZE && ny >= 0 && ny < GRID_VERTICAL_SIZE && grid[ny][nx] != 0)
+                {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+void placeShip(Ship ship)
+{
+    for (int i = 0; i < ship.size; i++)
+    {
+        int x = (int)ship.positions[i].x;
+        int y = (int)ship.positions[i].y;
+        grid[y][x] = 1;
+    }
+}
+
 Ship newCarrier(void)
 {
     Ship ship;
@@ -122,82 +168,85 @@ Ship newCarrier(void)
     ship.type = CARRIER;
     ship.isHorizontal = true;
 
-    float x = (float)GetRandomValue(0, 9);
-    float y = (float)GetRandomValue(0, 9);
-    // pa = position array
     Vector2 *pa = new Vector2[5];
-    // Vector2 pa[5];
-    pa[0] = (Vector2){x, y};
-    pa[1] = (Vector2){x, y + 1};
-    pa[2] = (Vector2){x, y + 2};
-    pa[3] = (Vector2){x + 1, y + 2};
-    pa[4] = (Vector2){x - 1, y + 2};
-
-    ship.positions = pa;
+    do
+    {
+        float x = (float)GetRandomValue(2, 7);
+        float y = (float)GetRandomValue(2, 5);
+        pa[0] = (Vector2){x, y};
+        pa[1] = (Vector2){x, y + 1};
+        pa[2] = (Vector2){x, y + 2};
+        pa[3] = (Vector2){x + 1, y + 2};
+        pa[4] = (Vector2){x - 1, y + 2};
+        ship.positions = pa;
+    } while (!canPlaceShip(ship));
 
     return ship;
 }
+
 Ship newCruiser(void)
 {
     Ship ship;
     ship.size = 4;
     ship.type = CRUISER;
-    ship.isHorizontal = true;
+    ship.isHorizontal = false;
 
-    float x = (float)GetRandomValue(0, 9);
-    float y = (float)GetRandomValue(0, 9);
-    // pa = position array
     Vector2 *pa = new Vector2[4];
-    // Vector2 pa[3];
-    pa[0] = (Vector2){x, y};
-    pa[1] = (Vector2){x, y + 1};
-    pa[2] = (Vector2){x, y + 2};
-    pa[3] = (Vector2){x, y + 3};
-
-    ship.positions = pa;
+    do
+    {
+        float x = (float)GetRandomValue(1, 8);
+        float y = (float)GetRandomValue(1, 5);
+        pa[0] = (Vector2){x, y};
+        pa[1] = (Vector2){x, y + 1};
+        pa[2] = (Vector2){x, y + 2};
+        pa[3] = (Vector2){x, y + 3};
+        ship.positions = pa;
+    } while (!canPlaceShip(ship));
 
     return ship;
 }
+
 Ship newBattleship(void)
 {
     Ship ship;
     ship.size = 3;
     ship.type = BATTLESHIP;
-    ship.isHorizontal = true;
+    ship.isHorizontal = false;
 
-    float x = (float)GetRandomValue(0, 9);
-    float y = (float)GetRandomValue(0, 9);
-    // pa = position array
     Vector2 *pa = new Vector2[3];
-    // Vector2 pa[4];
-    pa[0] = (Vector2){x, y};
-    pa[1] = (Vector2){x, y - 1};
-    pa[2] = (Vector2){x, y - 2};
-
-    ship.positions = pa;
+    do
+    {
+        float x = (float)GetRandomValue(1, 8);
+        float y = (float)GetRandomValue(3, 8);
+        pa[0] = (Vector2){x, y};
+        pa[1] = (Vector2){x, y - 1};
+        pa[2] = (Vector2){x, y - 2};
+        ship.positions = pa;
+    } while (!canPlaceShip(ship));
 
     return ship;
 }
+
 Ship newDestroyer(void)
 {
     Ship ship;
     ship.size = 2;
     ship.type = DESTROYER;
-    ship.isHorizontal = true;
+    ship.isHorizontal = false;
 
-    // pa = position array
     Vector2 *pa = new Vector2[2];
-    // Vector2 pa[2];
-    float x = (float)GetRandomValue(0, 9);
-    float y = (float)GetRandomValue(0, 9);
-
-    pa[0] = (Vector2){x, y};
-    pa[1] = (Vector2){x, y - 1};
-
-    ship.positions = pa;
+    do
+    {
+        float x = (float)GetRandomValue(1, 8);
+        float y = (float)GetRandomValue(2, 8);
+        pa[0] = (Vector2){x, y};
+        pa[1] = (Vector2){x, y - 1};
+        ship.positions = pa;
+    } while (!canPlaceShip(ship));
 
     return ship;
 }
+
 Ship newSubmarine(void)
 {
     Ship ship;
@@ -205,78 +254,84 @@ Ship newSubmarine(void)
     ship.type = SUBMARINE;
     ship.isHorizontal = true;
 
-    float x = (float)GetRandomValue(0, 9);
-    float y = (float)GetRandomValue(0, 9);
-    // pa = position array
     Vector2 *pa = new Vector2[1];
-    // Vector2 pa[1];
-    pa[0] = (Vector2){x, y};
-
-    ship.positions = pa;
+    do
+    {
+        float x = (float)GetRandomValue(1, 8);
+        float y = (float)GetRandomValue(1, 8);
+        pa[0] = (Vector2){x, y};
+        ship.positions = pa;
+    } while (!canPlaceShip(ship));
 
     return ship;
 }
 
 void newFleet(void)
 {
+    // Clear grid
+    for (int y = 0; y < GRID_VERTICAL_SIZE; y++)
+    {
+        for (int x = 0; x < GRID_HORIZONTAL_SIZE; x++)
+        {
+            grid[y][x] = 0;
+        }
+    }
+
     for (int i = 0; i < 1; i++)
     {
         Ship ship = newCarrier();
+        placeShip(ship);
         fleet.carriers[i] = ship;
     }
     for (int i = 0; i < 1; i++)
     {
         Ship ship = newCruiser();
+        placeShip(ship);
         fleet.cruisers[i] = ship;
     }
     for (int i = 0; i < 1; i++)
     {
         Ship ship = newBattleship();
+        placeShip(ship);
         fleet.battleships[i] = ship;
     }
     for (int i = 0; i < 1; i++)
     {
         Ship ship = newDestroyer();
+        placeShip(ship);
         fleet.destroyers[i] = ship;
     }
     for (int i = 0; i < 1; i++)
     {
         Ship ship = newSubmarine();
+        placeShip(ship);
         fleet.submarines[i] = ship;
     }
 }
 
 void UpdateGame(void)
 {
-    // if (IsKeyPressed(KEY_T))
-    // {
-    //     isDarkBackground = !isDarkBackground;
-    // }
     if (IsKeyPressed(KEY_G))
     {
         showGrid = !showGrid;
-    }
-    if (gameState == HOME)
-    {
-        newFleet();
     }
 }
 
 void DrawFleet(void)
 {
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 1; i++)
     {
         DrawShip(fleet.carriers[i]);
     }
-    for (int i = 0; i < 4; i++)
-    {
-        DrawShip(fleet.battleships[i]);
-    }
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 1; i++)
     {
         DrawShip(fleet.cruisers[i]);
     }
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 1; i++)
+    {
+        DrawShip(fleet.battleships[i]);
+    }
+    for (int i = 0; i < 1; i++)
     {
         DrawShip(fleet.destroyers[i]);
     }
@@ -290,14 +345,10 @@ void DrawShip(Ship ship)
 {
     for (int i = 0; i < ship.size; i++)
     {
-        int positionX = GRID_OFFSET_X + ship.positions[i].x * BLOCK_SIZE;
-        int positionY = GRID_OFFSET_Y + ship.positions[i].y * BLOCK_SIZE;
+        int positionX = GRID_OFFSET_X + (int)(ship.positions[i].x * BLOCK_SIZE) + BLOCK_SIZE / 4;
+        int positionY = GRID_OFFSET_Y + (int)(ship.positions[i].y * BLOCK_SIZE) + BLOCK_SIZE / 4;
 
-        DrawRectangle(positionX, positionY, BLOCK_SIZE, BLOCK_SIZE, DARKGRAY);
-
-        int x = ship.positions[i].x;
-        int y = ship.positions[i].y;
-        grid[y][x] = 1;
+        DrawRectangle(positionX, positionY, BLOCK_SIZE / 2, BLOCK_SIZE / 2, DARKGRAY);
     }
 }
 
@@ -307,13 +358,8 @@ void DrawGrid(void)
     int gridX = GRID_OFFSET_X;
     int gridY = GRID_OFFSET_Y;
 
-    // DrawRectangle(gridX, gridY, gridWidth, gridHeight, isDarkBackground ? DARKBLUE : BLUE);
-
-    DrawTexturePro(
-        seaBackground,
-        {0, 0, (float)seaBackground.width, (float)seaBackground.height},   // Source rectangle (full texture)
-        {(float)gridX, (float)gridY, (float)gridWidth, (float)gridHeight}, // Destination rectangle (grid size)
-        {0, 0}, 0.0f, WHITE);
+    DrawTexturePro(seaBackground, {0, 0, (float)seaBackground.width, (float)seaBackground.height},
+                   {(float)gridX, (float)gridY, (float)gridWidth, (float)gridHeight}, {0, 0}, 0.0f, WHITE);
 
     if (showGrid)
     {
@@ -337,7 +383,7 @@ void DrawGrid(void)
         char letter[2] = {(char)('A' + x), '\0'};
         Vector2 textSize = MeasureTextEx(font, letter, coordFontSize, 1);
         int textX = gridX + x * BLOCK_SIZE + (BLOCK_SIZE - (int)textSize.x) / 2;
-        int textY = gridY - (int)textSize.y - 5; // Above the grid
+        int textY = gridY - (int)textSize.y - 5;
         DrawTextEx(font, letter, (Vector2){(float)textX, (float)textY}, coordFontSize, 1, BLACK);
     }
     for (int y = 0; y < GRID_VERTICAL_SIZE; y++)
@@ -345,7 +391,7 @@ void DrawGrid(void)
         char number[3];
         sprintf(number, "%d", y + 1);
         Vector2 textSize = MeasureTextEx(font, number, coordFontSize, 1);
-        int textX = gridX - (int)textSize.x - 5; // Left of the grid
+        int textX = gridX - (int)textSize.x - 5;
         int textY = gridY + y * BLOCK_SIZE + (BLOCK_SIZE - (int)textSize.y) / 2;
         DrawTextEx(font, number, (Vector2){(float)textX, (float)textY}, coordFontSize, 1, BLACK);
     }
@@ -383,7 +429,6 @@ void DrawGame(float gameTime)
     }
 
     case PLAYING: {
-        // ClearBackground(Fade(BLUE, 0.1f));
         ClearBackground(BLUE);
         DrawGrid();
         DrawFleet();
