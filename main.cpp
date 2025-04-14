@@ -15,8 +15,8 @@ GameState gameState = HOME;
 enum ShipType
 {
     CARRIER,
-    BATTLESHIP,
     CRUISER,
+    BATTLESHIP,
     DESTROYER,
     SUBMARINE
 };
@@ -30,8 +30,8 @@ struct Ship
 struct Fleet
 {
     Ship carriers[5];
-    Ship battleships[4];
-    Ship cruisers[3];
+    Ship cruisers[4];
+    Ship battleships[3];
     Ship destroyers[2];
     Ship submarines[1];
 };
@@ -62,11 +62,13 @@ float gameTime = 0.0f;
 // Background textures
 Texture2D seaBackground;
 Texture2D battleshipBackground;
+
 // Declarations
 void UpdateGame(void);
 void DrawGrid(void);
 void DrawGame(float gameTime);
 void UnloadGame(void);
+void DrawShip(Ship ship);
 
 int main(void)
 {
@@ -120,30 +122,16 @@ Ship newCarrier(void)
     ship.type = CARRIER;
     ship.isHorizontal = true;
 
+    float x = (float)GetRandomValue(0, 9);
+    float y = (float)GetRandomValue(0, 9);
     // pa = position array
-    Vector2 pa[5];
-    pa[0] = (Vector2){(float)GetRandomValue(0, 10)};
-    pa[1] = (Vector2){};
-    pa[2] = (Vector2){};
-    pa[3] = (Vector2){};
-    pa[4] = (Vector2){};
-
-    ship.positions = pa;
-
-    return ship;
-}
-Ship newBattleship(void)
-{
-    Ship ship;
-    ship.size = 4;
-    ship.type = BATTLESHIP;
-    ship.isHorizontal = true;
-
-    Vector2 pa[4];
-    pa[0] = (Vector2){(float)GetRandomValue(0, 10)};
-    pa[1] = (Vector2){};
-    pa[2] = (Vector2){};
-    pa[3] = (Vector2){};
+    Vector2 *pa = new Vector2[5];
+    // Vector2 pa[5];
+    pa[0] = (Vector2){x, y};
+    pa[1] = (Vector2){x, y + 1};
+    pa[2] = (Vector2){x, y + 2};
+    pa[3] = (Vector2){x + 1, y + 2};
+    pa[4] = (Vector2){x - 1, y + 2};
 
     ship.positions = pa;
 
@@ -152,14 +140,39 @@ Ship newBattleship(void)
 Ship newCruiser(void)
 {
     Ship ship;
-    ship.size = 3;
+    ship.size = 4;
     ship.type = CRUISER;
     ship.isHorizontal = true;
 
-    Vector2 pa[3];
-    pa[0] = (Vector2){(float)GetRandomValue(0, 10)};
-    pa[1] = (Vector2){};
-    pa[2] = (Vector2){};
+    float x = (float)GetRandomValue(0, 9);
+    float y = (float)GetRandomValue(0, 9);
+    // pa = position array
+    Vector2 *pa = new Vector2[4];
+    // Vector2 pa[3];
+    pa[0] = (Vector2){x, y};
+    pa[1] = (Vector2){x, y + 1};
+    pa[2] = (Vector2){x, y + 2};
+    pa[3] = (Vector2){x, y + 3};
+
+    ship.positions = pa;
+
+    return ship;
+}
+Ship newBattleship(void)
+{
+    Ship ship;
+    ship.size = 3;
+    ship.type = BATTLESHIP;
+    ship.isHorizontal = true;
+
+    float x = (float)GetRandomValue(0, 9);
+    float y = (float)GetRandomValue(0, 9);
+    // pa = position array
+    Vector2 *pa = new Vector2[3];
+    // Vector2 pa[4];
+    pa[0] = (Vector2){x, y};
+    pa[1] = (Vector2){x, y - 1};
+    pa[2] = (Vector2){x, y - 2};
 
     ship.positions = pa;
 
@@ -172,10 +185,11 @@ Ship newDestroyer(void)
     ship.type = DESTROYER;
     ship.isHorizontal = true;
 
+    // pa = position array
     Vector2 *pa = new Vector2[2];
     // Vector2 pa[2];
-    float x = (float)GetRandomValue(0, 10);
-    float y = (float)GetRandomValue(0, 10);
+    float x = (float)GetRandomValue(0, 9);
+    float y = (float)GetRandomValue(0, 9);
 
     pa[0] = (Vector2){x, y};
     pa[1] = (Vector2){x, y - 1};
@@ -191,17 +205,45 @@ Ship newSubmarine(void)
     ship.type = SUBMARINE;
     ship.isHorizontal = true;
 
-    Vector2 pa[1];
-    pa[0] = (Vector2){(float)GetRandomValue(0, 10)};
+    float x = (float)GetRandomValue(0, 9);
+    float y = (float)GetRandomValue(0, 9);
+    // pa = position array
+    Vector2 *pa = new Vector2[1];
+    // Vector2 pa[1];
+    pa[0] = (Vector2){x, y};
 
     ship.positions = pa;
 
     return ship;
 }
+
 void newFleet(void)
 {
-    Ship destroyer = newDestroyer();
-    fleet.destroyers[0] = destroyer;
+    for (int i = 0; i < 1; i++)
+    {
+        Ship ship = newCarrier();
+        fleet.carriers[i] = ship;
+    }
+    for (int i = 0; i < 1; i++)
+    {
+        Ship ship = newCruiser();
+        fleet.cruisers[i] = ship;
+    }
+    for (int i = 0; i < 1; i++)
+    {
+        Ship ship = newBattleship();
+        fleet.battleships[i] = ship;
+    }
+    for (int i = 0; i < 1; i++)
+    {
+        Ship ship = newDestroyer();
+        fleet.destroyers[i] = ship;
+    }
+    for (int i = 0; i < 1; i++)
+    {
+        Ship ship = newSubmarine();
+        fleet.submarines[i] = ship;
+    }
 }
 
 void UpdateGame(void)
@@ -220,6 +262,30 @@ void UpdateGame(void)
     }
 }
 
+void DrawFleet(void)
+{
+    for (int i = 0; i < 5; i++)
+    {
+        DrawShip(fleet.carriers[i]);
+    }
+    for (int i = 0; i < 4; i++)
+    {
+        DrawShip(fleet.battleships[i]);
+    }
+    for (int i = 0; i < 3; i++)
+    {
+        DrawShip(fleet.cruisers[i]);
+    }
+    for (int i = 0; i < 2; i++)
+    {
+        DrawShip(fleet.destroyers[i]);
+    }
+    for (int i = 0; i < 1; i++)
+    {
+        DrawShip(fleet.submarines[i]);
+    }
+}
+
 void DrawShip(Ship ship)
 {
     for (int i = 0; i < ship.size; i++)
@@ -227,7 +293,11 @@ void DrawShip(Ship ship)
         int positionX = GRID_OFFSET_X + ship.positions[i].x * BLOCK_SIZE;
         int positionY = GRID_OFFSET_Y + ship.positions[i].y * BLOCK_SIZE;
 
-        DrawRectangle(positionX, positionY, BLOCK_SIZE, BLOCK_SIZE, WHITE);
+        DrawRectangle(positionX, positionY, BLOCK_SIZE, BLOCK_SIZE, DARKGRAY);
+
+        int x = ship.positions[i].x;
+        int y = ship.positions[i].y;
+        grid[y][x] = 1;
     }
 }
 
@@ -316,7 +386,7 @@ void DrawGame(float gameTime)
         // ClearBackground(Fade(BLUE, 0.1f));
         ClearBackground(BLUE);
         DrawGrid();
-        DrawShip(fleet.destroyers[0]);
+        DrawFleet();
         break;
     }
     }
