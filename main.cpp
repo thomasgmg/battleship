@@ -58,6 +58,8 @@ bool isDarkBackground = true;
 
 const int GRID_OFFSET_X = (screenWidth - GRID_HORIZONTAL_SIZE * BLOCK_SIZE) / 2 - 300;
 const int GRID_OFFSET_Y = (screenHeight - GRID_VERTICAL_SIZE * BLOCK_SIZE) / 2;
+const int GRID_OPPONENT_OFFSET_X = (screenWidth - GRID_HORIZONTAL_SIZE * BLOCK_SIZE) / 2 + 300;
+const int GRID_OPPONENT_OFFSET_Y = (screenHeight - GRID_VERTICAL_SIZE * BLOCK_SIZE) / 2;
 
 float gameTime = 0.0f;
 
@@ -68,6 +70,7 @@ Texture2D battleshipBackground;
 // Declarations
 void UpdateGame(void);
 void DrawGrid(void);
+void DrawOpponentGrid(void);
 void DrawGame(float gameTime);
 void UnloadGame(void);
 void DrawShip(Ship ship);
@@ -521,7 +524,7 @@ void DrawShip(Ship ship)
     }
 }
 
-// Grid
+// Grids
 void DrawGrid(void)
 {
     int gridX = GRID_OFFSET_X;
@@ -538,6 +541,50 @@ void DrawGrid(void)
             {
                 int screenX = GRID_OFFSET_X + x * BLOCK_SIZE;
                 int screenY = GRID_OFFSET_Y + y * BLOCK_SIZE;
+
+                DrawRectangleLines(screenX, screenY, BLOCK_SIZE, BLOCK_SIZE, BLACK);
+            }
+        }
+    }
+    DrawRectangleLines(gridX, gridY, gridWidth, gridHeight, BLACK);
+
+    // Coordinates
+    float coordFontSize = 25.0f;
+    for (int x = 0; x < GRID_HORIZONTAL_SIZE; x++)
+    {
+        char letter[2] = {(char)('A' + x), '\0'};
+        Vector2 textSize = MeasureTextEx(font, letter, coordFontSize, 1);
+        int textX = gridX + x * BLOCK_SIZE + (BLOCK_SIZE - (int)textSize.x) / 2;
+        int textY = gridY - (int)textSize.y - 5;
+        DrawTextEx(font, letter, (Vector2){(float)textX, (float)textY}, coordFontSize, 1, BLACK);
+    }
+    for (int y = 0; y < GRID_VERTICAL_SIZE; y++)
+    {
+        char number[3];
+        sprintf(number, "%d", y + 1);
+        Vector2 textSize = MeasureTextEx(font, number, coordFontSize, 1);
+        int textX = gridX - (int)textSize.x - 5;
+        int textY = gridY + y * BLOCK_SIZE + (BLOCK_SIZE - (int)textSize.y) / 2;
+        DrawTextEx(font, number, (Vector2){(float)textX, (float)textY}, coordFontSize, 1, BLACK);
+    }
+}
+
+void DrawOpponentGrid(void)
+{
+    int gridX = GRID_OPPONENT_OFFSET_X;
+    int gridY = GRID_OPPONENT_OFFSET_Y;
+
+    DrawTexturePro(seaBackground, {0, 0, (float)seaBackground.width, (float)seaBackground.height},
+                   {(float)gridX, (float)gridY, (float)gridWidth, (float)gridHeight}, {0, 0}, 0.0f, WHITE);
+
+    if (showGrid)
+    {
+        for (int y = 0; y < GRID_VERTICAL_SIZE; y++)
+        {
+            for (int x = 0; x < GRID_HORIZONTAL_SIZE; x++)
+            {
+                int screenX = GRID_OPPONENT_OFFSET_X + x * BLOCK_SIZE;
+                int screenY = GRID_OPPONENT_OFFSET_Y + y * BLOCK_SIZE;
 
                 DrawRectangleLines(screenX, screenY, BLOCK_SIZE, BLOCK_SIZE, BLACK);
             }
@@ -600,6 +647,7 @@ void DrawGame(float gameTime)
     case PLAYING: {
         ClearBackground(BLUE);
         DrawGrid();
+        DrawOpponentGrid();
         DrawFleet();
         break;
     }
