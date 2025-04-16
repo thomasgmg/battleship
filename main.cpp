@@ -513,8 +513,10 @@ void DrawShip(Ship ship)
         int positionX = GRID_OFFSET_X + (int)(ship.positions[i].x * BLOCK_SIZE);
         int positionY = GRID_OFFSET_Y + (int)(ship.positions[i].y * BLOCK_SIZE);
 
-        DrawRectangle(positionX, positionY, BLOCK_SIZE, BLOCK_SIZE, (Color)Fade({180, 180, 180, 255}, 0.7));
-        // DrawRectangleRounded();
+        // DrawRectangle(positionX, positionY, BLOCK_SIZE, BLOCK_SIZE, (Color)Fade({180, 180, 180, 255}, 0.7));
+        DrawRectangleRounded((Rectangle){(float)positionX, (float)positionY, (float)BLOCK_SIZE, (float)BLOCK_SIZE},
+                             0.3f, 8, (Color)Fade({180, 180, 180, 255}, 0.7));
+
         DrawRectangle(positionX + BLOCK_SIZE / 4, positionY + BLOCK_SIZE / 4, BLOCK_SIZE / 2, BLOCK_SIZE / 2, DARKGRAY);
     }
 }
