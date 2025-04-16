@@ -72,6 +72,7 @@ Texture2D battleshipBackground;
 void UpdateGame(void);
 void DrawGrid(void);
 void DrawOpponentGrid(void);
+void DrawCoordinates(void);
 void DrawGame(float gameTime);
 void UnloadGame(void);
 void DrawShip(Ship ship);
@@ -148,11 +149,6 @@ void resetGrid(void)
 // Ships functions
 bool canPlaceShip(Ship ship)
 {
-    // if (true)
-    // {
-    //     return true;
-    // }
-
     // Check bounds and occupancy
     for (int i = 0; i < ship.size; i++)
     {
@@ -196,6 +192,7 @@ void placeShip(Ship ship)
     }
 }
 
+// Ship initialization
 Ship initCarriers(void)
 {
     Ship ship;
@@ -472,7 +469,6 @@ void distributeFleet(void)
 
 void DrawFleet(void)
 {
-
     for (int i = 0; i < 1; i++)
     {
         DrawShip(fleet.carriers[i]);
@@ -501,23 +497,15 @@ void UpdateGame(void)
     {
         showGrid = !showGrid;
     }
-    // if (IsKeyDown(KEY_N) && IsKeyPressed(KEY_F))
-    // {
-    //     printf("Freezing\n");
-    //     newFleet();
-    // }
 }
 
 void DrawShip(Ship ship)
 {
     for (int i = 0; i < ship.size; i++)
     {
-        // int positionX = GRID_OFFSET_X + (int)(ship.positions[i].x * BLOCK_SIZE) + BLOCK_SIZE / 4;
-        // int positionY = GRID_OFFSET_Y + (int)(ship.positions[i].y * BLOCK_SIZE) + BLOCK_SIZE / 4;
         int positionX = GRID_OFFSET_X + (int)(ship.positions[i].x * BLOCK_SIZE);
         int positionY = GRID_OFFSET_Y + (int)(ship.positions[i].y * BLOCK_SIZE);
 
-        // DrawRectangle(positionX, positionY, BLOCK_SIZE, BLOCK_SIZE, (Color)Fade({180, 180, 180, 255}, 0.7));
         DrawRectangleRounded((Rectangle){(float)positionX, (float)positionY, (float)BLOCK_SIZE, (float)BLOCK_SIZE},
                              0.3f, 8, (Color)Fade({180, 180, 180, 255}, 0.5));
 
@@ -526,11 +514,36 @@ void DrawShip(Ship ship)
 }
 
 // Grids
+void DrawCoordinates(int offsetX, int offsetY)
+{
+    // Coordinates a - j
+    float coordFontSize = 25.0f;
+    for (int x = 0; x < GRID_HORIZONTAL_SIZE; x++)
+    {
+        char letter[2] = {(char)('A' + x), '\0'};
+        Vector2 textSize = MeasureTextEx(font, letter, coordFontSize, 1);
+        int textX = offsetX + x * BLOCK_SIZE + (BLOCK_SIZE - (int)textSize.x) / 2;
+        int textY = offsetY - (int)textSize.y - 5;
+        DrawTextEx(font, letter, (Vector2){(float)textX, (float)textY}, coordFontSize, 1, BLACK);
+    }
+    // Coordinates 1 - 10
+    for (int y = 0; y < GRID_VERTICAL_SIZE; y++)
+    {
+        char number[3];
+        sprintf(number, "%d", y + 1);
+        Vector2 textSize = MeasureTextEx(font, number, coordFontSize, 1);
+        int textX = offsetX - (int)textSize.x - 5;
+        int textY = offsetY + y * BLOCK_SIZE + (BLOCK_SIZE - (int)textSize.y) / 2;
+        DrawTextEx(font, number, (Vector2){(float)textX, (float)textY}, coordFontSize, 1, BLACK);
+    }
+}
+
 void DrawGrid(void)
 {
     int gridX = GRID_OFFSET_X;
     int gridY = GRID_OFFSET_Y;
 
+    // Draw sea as grid background
     DrawTexturePro(seaBackground, {0, 0, (float)seaBackground.width, (float)seaBackground.height},
                    {(float)gridX, (float)gridY, (float)gridWidth, (float)gridHeight}, {0, 0}, 0.0f, WHITE);
 
@@ -549,25 +562,7 @@ void DrawGrid(void)
     }
     DrawRectangleLines(gridX, gridY, gridWidth, gridHeight, BLACK);
 
-    // Coordinates
-    float coordFontSize = 25.0f;
-    for (int x = 0; x < GRID_HORIZONTAL_SIZE; x++)
-    {
-        char letter[2] = {(char)('A' + x), '\0'};
-        Vector2 textSize = MeasureTextEx(font, letter, coordFontSize, 1);
-        int textX = gridX + x * BLOCK_SIZE + (BLOCK_SIZE - (int)textSize.x) / 2;
-        int textY = gridY - (int)textSize.y - 5;
-        DrawTextEx(font, letter, (Vector2){(float)textX, (float)textY}, coordFontSize, 1, BLACK);
-    }
-    for (int y = 0; y < GRID_VERTICAL_SIZE; y++)
-    {
-        char number[3];
-        sprintf(number, "%d", y + 1);
-        Vector2 textSize = MeasureTextEx(font, number, coordFontSize, 1);
-        int textX = gridX - (int)textSize.x - 5;
-        int textY = gridY + y * BLOCK_SIZE + (BLOCK_SIZE - (int)textSize.y) / 2;
-        DrawTextEx(font, number, (Vector2){(float)textX, (float)textY}, coordFontSize, 1, BLACK);
-    }
+    DrawCoordinates(GRID_OFFSET_X, GRID_OFFSET_Y);
 }
 
 void DrawOpponentGrid(void)
@@ -575,6 +570,7 @@ void DrawOpponentGrid(void)
     int gridX = GRID_OPPONENT_OFFSET_X;
     int gridY = GRID_OPPONENT_OFFSET_Y;
 
+    // draw sea as grid background
     DrawTexturePro(seaBackground, {0, 0, (float)seaBackground.width, (float)seaBackground.height},
                    {(float)gridX, (float)gridY, (float)gridWidth, (float)gridHeight}, {0, 0}, 0.0f, WHITE);
 
@@ -593,25 +589,7 @@ void DrawOpponentGrid(void)
     }
     DrawRectangleLines(gridX, gridY, gridWidth, gridHeight, BLACK);
 
-    // Coordinates
-    float coordFontSize = 25.0f;
-    for (int x = 0; x < GRID_HORIZONTAL_SIZE; x++)
-    {
-        char letter[2] = {(char)('A' + x), '\0'};
-        Vector2 textSize = MeasureTextEx(font, letter, coordFontSize, 1);
-        int textX = gridX + x * BLOCK_SIZE + (BLOCK_SIZE - (int)textSize.x) / 2;
-        int textY = gridY - (int)textSize.y - 5;
-        DrawTextEx(font, letter, (Vector2){(float)textX, (float)textY}, coordFontSize, 1, BLACK);
-    }
-    for (int y = 0; y < GRID_VERTICAL_SIZE; y++)
-    {
-        char number[3];
-        sprintf(number, "%d", y + 1);
-        Vector2 textSize = MeasureTextEx(font, number, coordFontSize, 1);
-        int textX = gridX - (int)textSize.x - 5;
-        int textY = gridY + y * BLOCK_SIZE + (BLOCK_SIZE - (int)textSize.y) / 2;
-        DrawTextEx(font, number, (Vector2){(float)textX, (float)textY}, coordFontSize, 1, BLACK);
-    }
+    DrawCoordinates(GRID_OPPONENT_OFFSET_X, GRID_OPPONENT_OFFSET_Y);
 }
 
 void DrawGame(float gameTime)
@@ -643,6 +621,9 @@ void DrawGame(float gameTime)
         }
         DrawTextEx(font, "Welcome to BATTLESHIP", textPos, 40, 1, BLACK);
         break;
+    }
+
+    case NEW_GAME: {
     }
 
     case PLAYING: {
