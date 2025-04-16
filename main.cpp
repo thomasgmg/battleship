@@ -46,6 +46,7 @@ int const GRID_HORIZONTAL_SIZE = 10;
 int const GRID_VERTICAL_SIZE = 10;
 int const BLOCK_SIZE = 50;
 int grid[GRID_VERTICAL_SIZE][GRID_HORIZONTAL_SIZE] = {0};
+int opponentGrid[GRID_VERTICAL_SIZE][GRID_HORIZONTAL_SIZE] = {0};
 int gridWidth = GRID_HORIZONTAL_SIZE * BLOCK_SIZE;
 int gridHeight = GRID_VERTICAL_SIZE * BLOCK_SIZE;
 bool showGrid = true;
