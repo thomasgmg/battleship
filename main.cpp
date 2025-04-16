@@ -39,6 +39,7 @@ struct Fleet
 Fleet fleet;
 
 Font font;
+int const MAX_POSITIONING_ATTEMPTS = 100;
 
 // Grid
 int const GRID_HORIZONTAL_SIZE = 10;
@@ -271,175 +272,197 @@ void initFleet(void)
     }
 }
 
+void seedShip(Ship &ship)
+{
+    ship.isHorizontal = GetRandomValue(0, 1);
+
+    float x = (float)GetRandomValue(0, 9);
+    float y = (float)GetRandomValue(0, 9);
+    ship.positions[0] = (Vector2){x, y};
+}
+
+void buildCarrier(Ship &ship)
+{
+    float x = ship.positions[0].x;
+    float y = ship.positions[0].y;
+
+    if (ship.isHorizontal)
+    {
+        ship.positions[1] = (Vector2){x + 1, y};
+        ship.positions[2] = (Vector2){x + 2, y};
+        ship.positions[3] = (Vector2){x + 2, y - 1};
+        ship.positions[4] = (Vector2){x + 2, y + 1};
+    }
+    else
+    {
+        ship.positions[1] = (Vector2){x, y + 1};
+        ship.positions[2] = (Vector2){x, y + 2};
+        ship.positions[3] = (Vector2){x - 1, y + 2};
+        ship.positions[4] = (Vector2){x + 1, y + 2};
+    }
+}
+
+void buildCruiser(Ship &ship)
+{
+    float x = ship.positions[0].x;
+    float y = ship.positions[0].y;
+
+    if (ship.isHorizontal)
+    {
+        ship.positions[1] = (Vector2){x + 1, y};
+        ship.positions[2] = (Vector2){x + 2, y};
+        ship.positions[3] = (Vector2){x + 3, y};
+    }
+    else
+    {
+        ship.positions[1] = (Vector2){x, y + 1};
+        ship.positions[2] = (Vector2){x, y + 2};
+        ship.positions[3] = (Vector2){x, y + 3};
+    }
+}
+
+void buildBattleship(Ship &ship)
+{
+    float x = ship.positions[0].x;
+    float y = ship.positions[0].y;
+
+    if (ship.isHorizontal)
+    {
+        ship.positions[1] = (Vector2){x + 1, y};
+        ship.positions[2] = (Vector2){x + 2, y};
+    }
+    else
+    {
+        ship.positions[1] = (Vector2){x, y + 1};
+        ship.positions[2] = (Vector2){x, y + 2};
+    }
+}
+
+void buildDestroyer(Ship &ship)
+{
+    float x = ship.positions[0].x;
+    float y = ship.positions[0].y;
+
+    if (ship.isHorizontal)
+    {
+        ship.positions[1] = (Vector2){x + 1, y};
+    }
+    else
+    {
+        ship.positions[1] = (Vector2){x, y + 1};
+    }
+}
+
 void distributeFleet(void)
 {
     // Carrier
-    for (int i = 0; i < 1; i++)
+    for (int i = 0; i != 1; ++i)
     {
-        Ship &ship = fleet.carriers[i];
-        ship.isHorizontal = GetRandomValue(0, 1);
-        float x, y;
-        if (ship.isHorizontal)
+        for (int j = 0; j != MAX_POSITIONING_ATTEMPTS; ++j)
         {
-            x = (float)GetRandomValue(0, 9);
-            y = (float)GetRandomValue(0, 9);
-            ship.positions[0] = (Vector2){x, y};
-            ship.positions[1] = (Vector2){x + 1, y};
-            ship.positions[2] = (Vector2){x + 2, y};
-            ship.positions[3] = (Vector2){x + 2, y - 1};
-            ship.positions[4] = (Vector2){x + 2, y + 1};
-        }
-        else
-        {
-            x = (float)GetRandomValue(0, 9);
-            y = (float)GetRandomValue(0, 9);
-            ship.positions[0] = (Vector2){x, y};
-            ship.positions[1] = (Vector2){x, y + 1};
-            ship.positions[2] = (Vector2){x, y + 2};
-            ship.positions[3] = (Vector2){x - 1, y + 2};
-            ship.positions[4] = (Vector2){x + 1, y + 2};
-        }
-        if (canPlaceShip(ship))
-        {
-            placeShip(ship);
-        }
-        else
-        {
-            printf("could not place carrier, trying again...\n");
-            --i;
+            Ship &ship = fleet.carriers[i];
+            seedShip(ship);
+            buildCarrier(ship);
+
+            if (canPlaceShip(ship))
+            {
+                placeShip(ship);
+                break;
+            }
+            else
+            {
+                // printf("could not place carrier, trying again...\n");
+            }
         }
     }
-
     // Cruiser
-    for (int i = 0; i < 1; i++)
+    for (int i = 0; i != 1; ++i)
     {
-        Ship &ship = fleet.cruisers[i];
-        ship.isHorizontal = GetRandomValue(0, 1);
-        float x, y;
-        if (ship.isHorizontal)
+        for (int j = 0; j != MAX_POSITIONING_ATTEMPTS; ++j)
         {
-            x = (float)GetRandomValue(0, 9);
-            y = (float)GetRandomValue(0, 9);
-            ship.positions[0] = (Vector2){x, y};
-            ship.positions[1] = (Vector2){x, y + 1};
-            ship.positions[2] = (Vector2){x, y + 2};
-            ship.positions[3] = (Vector2){x, y + 3};
-        }
-        else
-        {
-            x = (float)GetRandomValue(0, 9);
-            y = (float)GetRandomValue(0, 9);
-            ship.positions[0] = (Vector2){x, y};
-            ship.positions[1] = (Vector2){x + 1, y};
-            ship.positions[2] = (Vector2){x + 2, y};
-            ship.positions[3] = (Vector2){x + 3, y};
-        }
-        if (canPlaceShip(ship))
-        {
-            placeShip(ship);
-        }
-        else
-        {
-            printf("could not place cruiser, trying again...\n");
-            --i;
+            Ship &ship = fleet.cruisers[i];
+            seedShip(ship);
+            buildCruiser(ship);
+
+            if (canPlaceShip(ship))
+            {
+                placeShip(ship);
+                break;
+            }
+            else
+            {
+                // printf("could not place cruiser, trying again...\n");
+            }
         }
     }
-
     // Battleship
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 2; ++i)
     {
-        Ship &ship = fleet.battleships[i];
-        ship.isHorizontal = GetRandomValue(0, 1);
-        float x, y;
-        if (ship.isHorizontal)
+        for (int j = 0; j != MAX_POSITIONING_ATTEMPTS; ++j)
         {
-            x = (float)GetRandomValue(0, 9);
-            y = (float)GetRandomValue(0, 9);
-            ship.positions[0] = (Vector2){x, y};
-            ship.positions[1] = (Vector2){x, y - 1};
-            ship.positions[2] = (Vector2){x, y - 2};
-        }
-        else
-        {
-            x = (float)GetRandomValue(0, 9);
-            y = (float)GetRandomValue(0, 9);
-            ship.positions[0] = (Vector2){x, y};
-            ship.positions[1] = (Vector2){x - 1, y};
-            ship.positions[2] = (Vector2){x - 2, y};
-        }
-        if (canPlaceShip(ship))
-        {
-            placeShip(ship);
-        }
-        else
-        {
-            printf("could not place battleship, trying again...\n");
-            --i;
+            Ship &ship = fleet.battleships[i];
+            seedShip(ship);
+            buildBattleship(ship);
+
+            if (canPlaceShip(ship))
+            {
+                placeShip(ship);
+                break;
+            }
+            else
+            {
+                // printf("could not place battleship, trying again...\n");
+            }
         }
     }
-
     // Destroyer
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 3; ++i)
     {
-        Ship &ship = fleet.destroyers[i];
-        ship.isHorizontal = GetRandomValue(0, 1);
-        float x, y;
-        if (ship.isHorizontal)
+        for (int j = 0; j != MAX_POSITIONING_ATTEMPTS; ++j)
         {
-            x = (float)GetRandomValue(0, 9);
-            y = (float)GetRandomValue(0, 9);
-            ship.positions[0] = (Vector2){x, y};
-            ship.positions[1] = (Vector2){x, y - 1};
-        }
-        else
-        {
-            x = (float)GetRandomValue(0, 9);
-            y = (float)GetRandomValue(0, 9);
-            ship.positions[0] = (Vector2){x, y};
-            ship.positions[1] = (Vector2){x - 1, y};
-        }
-        if (canPlaceShip(ship))
-        {
-            placeShip(ship);
-        }
-        else
-        {
-            printf("could not place destroyer, trying again...\n");
-            --i;
+            Ship &ship = fleet.destroyers[i];
+            seedShip(ship);
+            buildDestroyer(ship);
+
+            if (canPlaceShip(ship))
+            {
+                placeShip(ship);
+                break;
+            }
+            else
+            {
+                // printf("could not place destroyer, trying again...\n");
+            }
         }
     }
-
     // Submarine
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; ++i)
     {
         bool success = false;
-        for (int j = 0; j < 100; j++)
+        for (int j = 0; j < MAX_POSITIONING_ATTEMPTS; ++j)
         {
             Ship &ship = fleet.submarines[i];
-            ship.isHorizontal = true;
-            float x = (float)GetRandomValue(0, 9);
-            float y = (float)GetRandomValue(0, 9);
-            ship.positions[0] = (Vector2){x, y};
+            seedShip(ship);
 
             if (canPlaceShip(ship))
             {
                 placeShip(ship);
                 success = true;
-                printf("placed submarine succesfully\n");
+                // printf("placed submarine succesfully\n");
                 break;
             }
             else
             {
-                printf("[%d] could not place submarine at [%f, %f], trying again...\n", j, x, y);
-                // --i;
+                // printf("could not place submarine, trying again...\n");
             }
         }
 
         if (!success)
         {
-            printf("Attempts to place submarine exausted, exiting game...\n");
+            // printf("Attempts to place submarine exausted, exiting game...\n");
         }
     }
+
     printf("distributeFleet - end\n");
 }
 
@@ -491,6 +514,7 @@ void DrawShip(Ship ship)
         int positionY = GRID_OFFSET_Y + (int)(ship.positions[i].y * BLOCK_SIZE);
 
         DrawRectangle(positionX, positionY, BLOCK_SIZE, BLOCK_SIZE, (Color)Fade({180, 180, 180, 255}, 0.7));
+        // DrawRectangleRounded();
         DrawRectangle(positionX + BLOCK_SIZE / 4, positionY + BLOCK_SIZE / 4, BLOCK_SIZE / 2, BLOCK_SIZE / 2, DARKGRAY);
     }
 }
