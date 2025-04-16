@@ -515,7 +515,7 @@ void DrawShip(Ship ship)
 
         // DrawRectangle(positionX, positionY, BLOCK_SIZE, BLOCK_SIZE, (Color)Fade({180, 180, 180, 255}, 0.7));
         DrawRectangleRounded((Rectangle){(float)positionX, (float)positionY, (float)BLOCK_SIZE, (float)BLOCK_SIZE},
-                             0.3f, 8, (Color)Fade({180, 180, 180, 255}, 0.7));
+                             0.3f, 8, (Color)Fade({180, 180, 180, 255}, 0.5));
 
         DrawRectangle(positionX + BLOCK_SIZE / 4, positionY + BLOCK_SIZE / 4, BLOCK_SIZE / 2, BLOCK_SIZE / 2, DARKGRAY);
     }
