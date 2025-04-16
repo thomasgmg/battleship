@@ -44,7 +44,7 @@ int const MAX_POSITIONING_ATTEMPTS = 100;
 // Grid
 int const GRID_HORIZONTAL_SIZE = 10;
 int const GRID_VERTICAL_SIZE = 10;
-int const BLOCK_SIZE = 60;
+int const BLOCK_SIZE = 50;
 int grid[GRID_VERTICAL_SIZE][GRID_HORIZONTAL_SIZE] = {0};
 int gridWidth = GRID_HORIZONTAL_SIZE * BLOCK_SIZE;
 int gridHeight = GRID_VERTICAL_SIZE * BLOCK_SIZE;
@@ -56,7 +56,7 @@ int const screenHeight = 700;
 // Themes
 bool isDarkBackground = true;
 
-const int GRID_OFFSET_X = (screenWidth - GRID_HORIZONTAL_SIZE * BLOCK_SIZE) / 2;
+const int GRID_OFFSET_X = (screenWidth - GRID_HORIZONTAL_SIZE * BLOCK_SIZE) / 2 - 300;
 const int GRID_OFFSET_Y = (screenHeight - GRID_VERTICAL_SIZE * BLOCK_SIZE) / 2;
 
 float gameTime = 0.0f;
