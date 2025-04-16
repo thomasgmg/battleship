@@ -356,6 +356,8 @@ void buildDestroyer(Ship &ship)
 
 void distributeFleet(void)
 {
+    bool success = false;
+
     // Carrier
     for (int i = 0; i != 1; ++i)
     {
@@ -368,12 +370,17 @@ void distributeFleet(void)
             if (canPlaceShip(ship))
             {
                 placeShip(ship);
+                success = true;
                 break;
             }
             else
             {
                 // printf("could not place carrier, trying again...\n");
             }
+        }
+        if (!success)
+        {
+            printf("Attempts to place submarine exausted, exiting game...\n");
         }
     }
     // Cruiser
@@ -388,12 +395,17 @@ void distributeFleet(void)
             if (canPlaceShip(ship))
             {
                 placeShip(ship);
+                success = true;
                 break;
             }
             else
             {
                 // printf("could not place cruiser, trying again...\n");
             }
+        }
+        if (!success)
+        {
+            printf("Attempts to place submarine exausted, exiting game...\n");
         }
     }
     // Battleship
@@ -408,12 +420,17 @@ void distributeFleet(void)
             if (canPlaceShip(ship))
             {
                 placeShip(ship);
+                success = true;
                 break;
             }
             else
             {
                 // printf("could not place battleship, trying again...\n");
             }
+        }
+        if (!success)
+        {
+            printf("Attempts to place submarine exausted, exiting game...\n");
         }
     }
     // Destroyer
@@ -428,6 +445,7 @@ void distributeFleet(void)
             if (canPlaceShip(ship))
             {
                 placeShip(ship);
+                success = true;
                 break;
             }
             else
@@ -435,11 +453,14 @@ void distributeFleet(void)
                 // printf("could not place destroyer, trying again...\n");
             }
         }
+        if (!success)
+        {
+            printf("Attempts to place submarine exausted, exiting game...\n");
+        }
     }
     // Submarine
     for (int i = 0; i < 4; ++i)
     {
-        bool success = false;
         for (int j = 0; j < MAX_POSITIONING_ATTEMPTS; ++j)
         {
             Ship &ship = fleet.submarines[i];
@@ -449,7 +470,6 @@ void distributeFleet(void)
             {
                 placeShip(ship);
                 success = true;
-                // printf("placed submarine succesfully\n");
                 break;
             }
             else
@@ -460,7 +480,7 @@ void distributeFleet(void)
 
         if (!success)
         {
-            // printf("Attempts to place submarine exausted, exiting game...\n");
+            printf("Attempts to place submarine exausted, exiting game...\n");
         }
     }
 
