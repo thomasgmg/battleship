@@ -104,7 +104,7 @@ int main(void)
     battleshipBackground = LoadTexture("resources/battleshipBackground.jpeg");
 
     InitAudioDevice();
-    backgroundMusic = LoadMusicStream("resources/Eery_battleship_background_music.mp3");
+    backgroundMusic = LoadMusicStream("resources/Battleship_music.mp3");
 
     SetTargetFPS(60);
 
