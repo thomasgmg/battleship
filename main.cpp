@@ -1,8 +1,15 @@
-#include "raylib.h"
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <thread>
+
+#include "raylib.h"
+
+#include "client.h"
+#include "fleet.h"
+
+using namespace std;
 
 // Structs and Types
 enum GameState
@@ -13,30 +20,30 @@ enum GameState
 };
 GameState gameState = HOME;
 
-enum ShipType
-{
-    CARRIER,
-    CRUISER,
-    BATTLESHIP,
-    DESTROYER,
-    SUBMARINE
-};
-struct Ship
-{
-    ShipType type;
-    int size;
-    bool isHorizontal;
-    Vector2 *positions;
-};
-struct Fleet
-{
-    Ship carriers[1];
-    Ship cruisers[1];
-    Ship battleships[2];
-    Ship destroyers[3];
-    Ship submarines[4];
-};
-Fleet fleet;
+// enum ShipType
+// {
+//     CARRIER,
+//     CRUISER,
+//     BATTLESHIP,
+//     DESTROYER,
+//     SUBMARINE
+// };
+// struct Ship
+// {
+//     ShipType type;
+//     int size;
+//     bool isHorizontal;
+//     Vector2 *positions;
+// };
+// struct Fleet
+// {
+//     Ship carriers[1];
+//     Ship cruisers[1];
+//     Ship battleships[2];
+//     Ship destroyers[3];
+//     Ship submarines[4];
+// };
+// Fleet fleet;
 
 Font font;
 int const MAX_POSITIONING_ATTEMPTS = 100;
@@ -68,6 +75,10 @@ float gameTime = 0.0f;
 Texture2D seaBackground;
 Texture2D battleshipBackground;
 
+// Music / Sound
+Music backgroundMusic;
+bool isMusicPlaying = false;
+
 // Declarations
 void UpdateGame(void);
 void DrawGrid(void);
@@ -89,16 +100,23 @@ int main(void)
     srand(time(0));
     InitWindow(screenWidth, screenHeight, "Classic Game: BATTLESHIP");
 
-    SetTargetFPS(60);
-
     seaBackground = LoadTexture("resources/seeaBackground.jpeg");
     battleshipBackground = LoadTexture("resources/battleshipBackground.jpeg");
 
+    InitAudioDevice();
+    backgroundMusic = LoadMusicStream("resources/Eery_battleship_background_music.mp3");
+
+    SetTargetFPS(60);
+
     font = LoadFontEx("resources/font.ttf", 96, 0, 0);
+
+    thread clientThread(loop);
 
     initFleet();
     while (!WindowShouldClose())
     {
+        UpdateMusicStream(backgroundMusic);
+
         gameTime += GetFrameTime();
 
         switch (gameState)
@@ -115,6 +133,8 @@ int main(void)
             resetGrid();
             distributeFleet();
             gameState = PLAYING;
+            PlayMusicStream(backgroundMusic);
+            isMusicPlaying = true;
             break;
         }
 
@@ -193,169 +213,171 @@ void placeShip(Ship ship)
 }
 
 // Ship initialization
-Ship initCarriers(void)
-{
-    Ship ship;
-    ship.size = 5;
-    ship.type = CARRIER;
-    ship.positions = new Vector2[5];
+// Ship initCarriers(void)
+// {
+//     Ship ship;
+//     ship.size = 5;
+//     ship.type = CARRIER;
+//     ship.positions = new Vector2[5];
+//
+//     return ship;
+// }
+// Ship initCruisers(void)
+// {
+//     Ship ship;
+//     ship.size = 4;
+//     ship.type = CRUISER;
+//     ship.isHorizontal = GetRandomValue(0, 1);
+//     ship.positions = new Vector2[4];
+//
+//     return ship;
+// }
+// Ship initBattleships(void)
+// {
+//     Ship ship;
+//     ship.size = 3;
+//     ship.type = BATTLESHIP;
+//     ship.positions = new Vector2[3];
+//
+//     return ship;
+// }
+// Ship initDestroyers(void)
+// {
+//     Ship ship;
+//     ship.size = 2;
+//     ship.type = DESTROYER;
+//     ship.positions = new Vector2[2];
+//
+//     return ship;
+// }
+// Ship initSubmarines(void)
+// {
+//     Ship ship;
+//     ship.size = 1;
+//     ship.type = SUBMARINE;
+//     ship.positions = new Vector2[1];
+//
+//     return ship;
+// }
 
-    return ship;
-}
-Ship initCruisers(void)
-{
-    Ship ship;
-    ship.size = 4;
-    ship.type = CRUISER;
-    ship.isHorizontal = GetRandomValue(0, 1);
-    ship.positions = new Vector2[4];
+// void initFleet(void)
+// {
+//     int numberOfShips = 1;
+//     for (int i = 0; i < numberOfShips; i++)
+//     {
+//         fleet.carriers[i] = initCarriers();
+//     }
+//
+//     numberOfShips = 1;
+//     for (int i = 0; i < numberOfShips; i++)
+//     {
+//         fleet.cruisers[i] = initCruisers();
+//     }
+//
+//     numberOfShips = 2;
+//     for (int i = 0; i < numberOfShips; i++)
+//     {
+//         fleet.battleships[i] = initBattleships();
+//     }
+//
+//     numberOfShips = 3;
+//     for (int i = 0; i < numberOfShips; i++)
+//     {
+//         fleet.destroyers[i] = initDestroyers();
+//     }
+//
+//     numberOfShips = 4;
+//     for (int i = 0; i < numberOfShips; i++)
+//     {
+//         fleet.submarines[i] = initSubmarines();
+//     }
+// }
 
-    return ship;
-}
-Ship initBattleships(void)
-{
-    Ship ship;
-    ship.size = 3;
-    ship.type = BATTLESHIP;
-    ship.positions = new Vector2[3];
-
-    return ship;
-}
-Ship initDestroyers(void)
-{
-    Ship ship;
-    ship.size = 2;
-    ship.type = DESTROYER;
-    ship.positions = new Vector2[2];
-
-    return ship;
-}
-Ship initSubmarines(void)
-{
-    Ship ship;
-    ship.size = 1;
-    ship.type = SUBMARINE;
-    ship.positions = new Vector2[1];
-
-    return ship;
-}
-
-void initFleet(void)
-{
-    int numberOfShips = 1;
-    for (int i = 0; i < numberOfShips; i++)
-    {
-        fleet.carriers[i] = initCarriers();
-    }
-
-    numberOfShips = 1;
-    for (int i = 0; i < numberOfShips; i++)
-    {
-        fleet.cruisers[i] = initCruisers();
-    }
-
-    numberOfShips = 2;
-    for (int i = 0; i < numberOfShips; i++)
-    {
-        fleet.battleships[i] = initBattleships();
-    }
-
-    numberOfShips = 3;
-    for (int i = 0; i < numberOfShips; i++)
-    {
-        fleet.destroyers[i] = initDestroyers();
-    }
-
-    numberOfShips = 4;
-    for (int i = 0; i < numberOfShips; i++)
-    {
-        fleet.submarines[i] = initSubmarines();
-    }
-}
-
-void seedShip(Ship &ship)
-{
-    ship.isHorizontal = GetRandomValue(0, 1);
-
-    float x = (float)GetRandomValue(0, 9);
-    float y = (float)GetRandomValue(0, 9);
-    ship.positions[0] = (Vector2){x, y};
-}
-
-void buildCarrier(Ship &ship)
-{
-    float x = ship.positions[0].x;
-    float y = ship.positions[0].y;
-
-    if (ship.isHorizontal)
-    {
-        ship.positions[1] = (Vector2){x + 1, y};
-        ship.positions[2] = (Vector2){x + 2, y};
-        ship.positions[3] = (Vector2){x + 2, y - 1};
-        ship.positions[4] = (Vector2){x + 2, y + 1};
-    }
-    else
-    {
-        ship.positions[1] = (Vector2){x, y + 1};
-        ship.positions[2] = (Vector2){x, y + 2};
-        ship.positions[3] = (Vector2){x - 1, y + 2};
-        ship.positions[4] = (Vector2){x + 1, y + 2};
-    }
-}
-
-void buildCruiser(Ship &ship)
-{
-    float x = ship.positions[0].x;
-    float y = ship.positions[0].y;
-
-    if (ship.isHorizontal)
-    {
-        ship.positions[1] = (Vector2){x + 1, y};
-        ship.positions[2] = (Vector2){x + 2, y};
-        ship.positions[3] = (Vector2){x + 3, y};
-    }
-    else
-    {
-        ship.positions[1] = (Vector2){x, y + 1};
-        ship.positions[2] = (Vector2){x, y + 2};
-        ship.positions[3] = (Vector2){x, y + 3};
-    }
-}
-
-void buildBattleship(Ship &ship)
-{
-    float x = ship.positions[0].x;
-    float y = ship.positions[0].y;
-
-    if (ship.isHorizontal)
-    {
-        ship.positions[1] = (Vector2){x + 1, y};
-        ship.positions[2] = (Vector2){x + 2, y};
-    }
-    else
-    {
-        ship.positions[1] = (Vector2){x, y + 1};
-        ship.positions[2] = (Vector2){x, y + 2};
-    }
-}
-
-void buildDestroyer(Ship &ship)
-{
-    float x = ship.positions[0].x;
-    float y = ship.positions[0].y;
-
-    if (ship.isHorizontal)
-    {
-        ship.positions[1] = (Vector2){x + 1, y};
-    }
-    else
-    {
-        ship.positions[1] = (Vector2){x, y + 1};
-    }
-}
+// void seedShip(Ship &ship)
+// {
+//     ship.isHorizontal = GetRandomValue(0, 1);
+//
+//     float x = (float)GetRandomValue(0, 9);
+//     float y = (float)GetRandomValue(0, 9);
+//     ship.positions[0] = (Vector2){x, y};
+// }
+//
+// void buildCarrier(Ship &ship)
+// {
+//     float x = ship.positions[0].x;
+//     float y = ship.positions[0].y;
+//
+//     if (ship.isHorizontal)
+//     {
+//         ship.positions[1] = (Vector2){x + 1, y};
+//         ship.positions[2] = (Vector2){x + 2, y};
+//         ship.positions[3] = (Vector2){x + 2, y - 1};
+//         ship.positions[4] = (Vector2){x + 2, y + 1};
+//     }
+//     else
+//     {
+//         ship.positions[1] = (Vector2){x, y + 1};
+//         ship.positions[2] = (Vector2){x, y + 2};
+//         ship.positions[3] = (Vector2){x - 1, y + 2};
+//         ship.positions[4] = (Vector2){x + 1, y + 2};
+//     }
+// }
+//
+// void buildCruiser(Ship &ship)
+// {
+//     float x = ship.positions[0].x;
+//     float y = ship.positions[0].y;
+//
+//     if (ship.isHorizontal)
+//     {
+//         ship.positions[1] = (Vector2){x + 1, y};
+//         ship.positions[2] = (Vector2){x + 2, y};
+//         ship.positions[3] = (Vector2){x + 3, y};
+//     }
+//     else
+//     {
+//         ship.positions[1] = (Vector2){x, y + 1};
+//         ship.positions[2] = (Vector2){x, y + 2};
+//         ship.positions[3] = (Vector2){x, y + 3};
+//     }
+// }
+//
+// void buildBattleship(Ship &ship)
+// {
+//     float x = ship.positions[0].x;
+//     float y = ship.positions[0].y;
+//
+//     if (ship.isHorizontal)
+//     {
+//         ship.positions[1] = (Vector2){x + 1, y};
+//         ship.positions[2] = (Vector2){x + 2, y};
+//     }
+//     else
+//     {
+//         ship.positions[1] = (Vector2){x, y + 1};
+//         ship.positions[2] = (Vector2){x, y + 2};
+//     }
+// }
+//
+// void buildDestroyer(Ship &ship)
+// {
+//     float x = ship.positions[0].x;
+//     float y = ship.positions[0].y;
+//
+//     if (ship.isHorizontal)
+//     {
+//         ship.positions[1] = (Vector2){x + 1, y};
+//     }
+//     else
+//     {
+//         ship.positions[1] = (Vector2){x, y + 1};
+//     }
+// }
 
 void distributeFleet(void)
 {
+    Fleet &fleet = getFleet();
+
     bool success = false;
 
     // Carrier
@@ -489,6 +511,8 @@ void distributeFleet(void)
 
 void DrawFleet(void)
 {
+    Fleet const &fleet = getFleet();
+
     for (int i = 0; i < 1; i++)
     {
         DrawShip(fleet.carriers[i]);
@@ -508,14 +532,6 @@ void DrawFleet(void)
     for (int i = 0; i < 4; i++)
     {
         DrawShip(fleet.submarines[i]);
-    }
-}
-
-void UpdateGame(void)
-{
-    if (IsKeyPressed(KEY_G))
-    {
-        showGrid = !showGrid;
     }
 }
 
@@ -582,6 +598,9 @@ void DrawGrid(void)
     }
     DrawRectangleLines(gridX, gridY, gridWidth, gridHeight, BLACK);
 
+    DrawTextEx(font, "My fleet:", (Vector2){(float)GetScreenWidth() / 2 - 375, (float)GetScreenHeight() / 2 - 330}, 35,
+               1, BLACK);
+
     DrawCoordinates(GRID_OFFSET_X, GRID_OFFSET_Y);
 }
 
@@ -609,7 +628,19 @@ void DrawOpponentGrid(void)
     }
     DrawRectangleLines(gridX, gridY, gridWidth, gridHeight, BLACK);
 
+    DrawTextEx(font,
+               "Opponent's fleet:", (Vector2){(float)GetScreenWidth() / 2 + 180, (float)GetScreenHeight() / 2 - 330},
+               35, 1, BLACK);
+
     DrawCoordinates(GRID_OPPONENT_OFFSET_X, GRID_OPPONENT_OFFSET_Y);
+}
+
+void UpdateGame(void)
+{
+    if (IsKeyPressed(KEY_G))
+    {
+        showGrid = !showGrid;
+    }
 }
 
 void DrawGame(float gameTime)
@@ -659,16 +690,16 @@ void DrawGame(float gameTime)
 
 void UnloadGame(void)
 {
-    for (int i = 0; i < 1; i++)
-        delete[] fleet.carriers[i].positions;
-    for (int i = 0; i < 1; i++)
-        delete[] fleet.cruisers[i].positions;
-    for (int i = 0; i < 2; i++)
-        delete[] fleet.battleships[i].positions;
-    for (int i = 0; i < 3; i++)
-        delete[] fleet.destroyers[i].positions;
-    for (int i = 0; i < 4; i++)
-        delete[] fleet.submarines[i].positions;
+    // for (int i = 0; i < 1; i++)
+    //     delete[] fleet.carriers[i].positions;
+    // for (int i = 0; i < 1; i++)
+    //     delete[] fleet.cruisers[i].positions;
+    // for (int i = 0; i < 2; i++)
+    //     delete[] fleet.battleships[i].positions;
+    // for (int i = 0; i < 3; i++)
+    //     delete[] fleet.destroyers[i].positions;
+    // for (int i = 0; i < 4; i++)
+    //     delete[] fleet.submarines[i].positions;
     UnloadFont(font);
     UnloadTexture(seaBackground);
     UnloadTexture(battleshipBackground);

@@ -1,7 +1,6 @@
 #include <cstring>
 #include <iostream>
 #include <netinet/in.h>
-#include <stdio.h>
 #include <string>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -26,22 +25,22 @@ int main()
     while (true)
     {
         // Receive client’s move
-        int bytes_received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
-        if (bytes_received > 0)
-        {
-            buffer[bytes_received] = '\0';
-            printf("Received: %s\n", buffer);
-            if (strcmp(buffer, "q") == 0)
-            { // Check if client sent "q"
-                printf("Client requested quit\n");
-                break;
-            }
-        }
-        else if (bytes_received == 0)
-        {
-            printf("Client disconnected\n");
-            break;
-        }
+        // int bytes_received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+        // if (bytes_received > 0)
+        // {
+        //     buffer[bytes_received] = '\0';
+        //     printf("Received: %s\n", buffer);
+        //     if (strcmp(buffer, "q") == 0)
+        //     { // Check if client sent "q"
+        //         printf("Client requested quit\n");
+        //         break;
+        //     }
+        // }
+        // else if (bytes_received == 0)
+        // {
+        //     printf("Client disconnected\n");
+        //     break;
+        // }
 
         // Send response to client
         cout << "Enter response to client (or 'q' to exit): " << endl;

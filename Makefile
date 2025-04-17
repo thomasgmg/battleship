@@ -22,7 +22,7 @@ else
 endif
 
 # Source and output
-SRC = main.cpp
+SRC = main.cpp client.cpp fleet.cpp
 OUT = battleship$(EXT)
 
 # Build
