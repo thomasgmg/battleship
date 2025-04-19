@@ -1,13 +1,13 @@
+#include "raylib.h"
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
 #include <thread>
 
-#include "raylib.h"
-
 #include "client.h"
 #include "fleet.h"
+#include "game.h"
 
 using namespace std;
 
@@ -19,31 +19,6 @@ enum GameState
     PLAYING
 };
 GameState gameState = HOME;
-
-// enum ShipType
-// {
-//     CARRIER,
-//     CRUISER,
-//     BATTLESHIP,
-//     DESTROYER,
-//     SUBMARINE
-// };
-// struct Ship
-// {
-//     ShipType type;
-//     int size;
-//     bool isHorizontal;
-//     Vector2 *positions;
-// };
-// struct Fleet
-// {
-//     Ship carriers[1];
-//     Ship cruisers[1];
-//     Ship battleships[2];
-//     Ship destroyers[3];
-//     Ship submarines[4];
-// };
-// Fleet fleet;
 
 Font font;
 int const MAX_POSITIONING_ATTEMPTS = 100;
@@ -60,6 +35,16 @@ bool showGrid = true;
 
 int const screenWidth = 1250;
 int const screenHeight = 700;
+
+// Attacking related declarations
+int attackCount = 0;
+int const MAX_ATTACKS = 3;
+
+bool showGlow = false;
+int glowGridX = -1;
+int glowGridY = -1;
+float glowTimer = 0.0f;
+float const GLOW_DURATION = 1.5f;
 
 // Themes
 bool isDarkBackground = true;
@@ -92,9 +77,24 @@ void placeShip(Ship ship);
 void distributeFleet(void);
 void initFleet(void);
 void resetGrid(void);
+void getAttackCoordinates(void);
+void showClickedGridBlock(void);
 
-int main(void)
+int main(int argc, char *argv[])
 {
+    string ip = "127.0.0.1";
+    int port = 8000;
+
+    if (argc > 1)
+    {
+        ip = argv[1];
+    }
+    if (argc > 2)
+    {
+        port = atoi(argv[2]);
+    }
+    connectToServer(ip, port);
+
     SetConfigFlags(FLAG_WINDOW_TRANSPARENT);
 
     srand(time(0));
@@ -109,8 +109,6 @@ int main(void)
     SetTargetFPS(60);
 
     font = LoadFontEx("resources/font.ttf", 96, 0, 0);
-
-    thread clientThread(loop);
 
     initFleet();
     while (!WindowShouldClose())
@@ -130,8 +128,20 @@ int main(void)
         }
 
         case NEW_GAME: {
+            disconnectFromServer();
+            connectToServer(ip, port);
+
             resetGrid();
+
+            string playerCode = sendHello();
+            getPlayer().code = playerCode;
+
             distributeFleet();
+            sendFleet(getFleet());
+            // thread t(sendFleet, ref(getFleet()));
+            // t.detach();
+
+            // TODO do this only when server sends START ...
             gameState = PLAYING;
             PlayMusicStream(backgroundMusic);
             isMusicPlaying = true;
@@ -149,9 +159,59 @@ int main(void)
         UpdateGame();
         DrawGame(gameTime);
     }
+
+    disconnectFromServer();
     UnloadGame();
     CloseWindow();
     return 0;
+}
+
+void getAttackCoordinates(void)
+{
+    if (attackCount >= MAX_ATTACKS)
+    {
+        return;
+    }
+
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+    {
+        Vector2 mousePoint = GetMousePosition();
+
+        // Define the opponent's grid rectangle
+        Rectangle opponentGridRect = {(float)GRID_OPPONENT_OFFSET_X, (float)GRID_OPPONENT_OFFSET_Y,
+                                      (float)(GRID_HORIZONTAL_SIZE * BLOCK_SIZE),
+                                      (float)(GRID_VERTICAL_SIZE * BLOCK_SIZE)};
+
+        if (CheckCollisionPointRec(mousePoint, opponentGridRect))
+        {
+            int gridX = (int)((mousePoint.x - GRID_OPPONENT_OFFSET_X) / BLOCK_SIZE);
+            int gridY = (int)((mousePoint.y - GRID_OPPONENT_OFFSET_Y) / BLOCK_SIZE);
+
+            if (gridX >= 0 && gridX < GRID_HORIZONTAL_SIZE && gridY >= 0 && gridY < GRID_VERTICAL_SIZE)
+            {
+                attackCount++;
+                //  print coordinates (temporary)
+                printf("Attack coordinates: (%d, %d)\n", gridX, gridY);
+                // Example: sendAttack(gridX, gridY);
+
+                showGlow = true;
+                glowGridX = gridX;
+                glowGridY = gridY;
+                glowTimer = 0.0f;
+            }
+        }
+    }
+}
+
+void showClickedGridBlock(void)
+{
+    if (showGlow && glowGridX >= 0 && glowGridX < GRID_HORIZONTAL_SIZE && glowGridY >= 0 &&
+        glowGridY < GRID_VERTICAL_SIZE)
+    {
+        int glowX = GRID_OPPONENT_OFFSET_X + glowGridX * BLOCK_SIZE;
+        int glowY = GRID_OPPONENT_OFFSET_Y + glowGridY * BLOCK_SIZE;
+        DrawRectangle(glowX, glowY, BLOCK_SIZE, BLOCK_SIZE, (Color){255, 255, 0, 100});
+    }
 }
 
 void resetGrid(void)
@@ -343,15 +403,13 @@ void distributeFleet(void)
             printf("Attempts to place submarine exausted, exiting game...\n");
         }
     }
-
-    printf("distributeFleet - end\n");
 }
 
 void DrawFleet(void)
 {
     Fleet const &fleet = getFleet();
 
-    for (int i = 0; i < 1; i++)
+    for (int i = 0; i < NUMBER_OF_CARRIERS; i++)
     {
         DrawShip(fleet.carriers[i]);
     }
@@ -471,6 +529,8 @@ void DrawOpponentGrid(void)
                35, 1, BLACK);
 
     DrawCoordinates(GRID_OPPONENT_OFFSET_X, GRID_OPPONENT_OFFSET_Y);
+
+    showClickedGridBlock();
 }
 
 void UpdateGame(void)
@@ -478,6 +538,18 @@ void UpdateGame(void)
     if (IsKeyPressed(KEY_G))
     {
         showGrid = !showGrid;
+    }
+    if (gameState == PLAYING)
+    {
+        getAttackCoordinates();
+    }
+    if (showGlow)
+    {
+        glowTimer += GetFrameTime();
+        if (glowTimer >= GLOW_DURATION)
+        {
+            showGlow = false;
+        }
     }
 }
 
