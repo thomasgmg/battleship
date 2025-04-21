@@ -11,15 +11,6 @@
 
 using namespace std;
 
-// Structs and Types
-enum GameState
-{
-    HOME,
-    NEW_GAME,
-    PLAYING
-};
-GameState gameState = HOME;
-
 Font font;
 int const MAX_POSITIONING_ATTEMPTS = 100;
 
@@ -93,7 +84,7 @@ int main(int argc, char *argv[])
     {
         port = atoi(argv[2]);
     }
-    connectToServer(ip, port);
+    // connectToServer(ip, port);
 
     SetConfigFlags(FLAG_WINDOW_TRANSPARENT);
 
@@ -117,12 +108,13 @@ int main(int argc, char *argv[])
 
         gameTime += GetFrameTime();
 
-        switch (gameState)
+        Game &game = getGame();
+        switch (game.gameState)
         {
         case HOME: {
             if (IsKeyPressed(KEY_SPACE))
             {
-                gameState = NEW_GAME;
+                game.gameState = NEW_GAME;
             }
             break;
         }
@@ -137,21 +129,36 @@ int main(int argc, char *argv[])
             getPlayer().code = playerCode;
 
             distributeFleet();
-            sendFleet(getFleet());
-            // thread t(sendFleet, ref(getFleet()));
-            // t.detach();
 
-            // TODO do this only when server sends START ...
-            gameState = PLAYING;
-            PlayMusicStream(backgroundMusic);
-            isMusicPlaying = true;
+            game.gameState = SENDING_FLEET;
+            // sendFleet(getFleet());
+            thread t(sendFleet, ref(getFleet()));
+            t.detach();
+
+            // // TODO do this only when server sends START ...
+            // game.gameState = PLAYING;
+            // PlayMusicStream(backgroundMusic);
+            // isMusicPlaying = true;
+            break;
+        }
+
+        case SENDING_FLEET: {
+            break;
+        }
+
+        case WAITING_FOR_TURN: {
+            break;
+        }
+
+        case ATTACKING: {
+            getAttackCoordinates();
             break;
         }
 
         case PLAYING: {
             if (IsKeyPressed(KEY_H))
             {
-                gameState = HOME;
+                game.gameState = HOME;
             }
             break;
         }
@@ -539,10 +546,8 @@ void UpdateGame(void)
     {
         showGrid = !showGrid;
     }
-    if (gameState == PLAYING)
-    {
-        getAttackCoordinates();
-    }
+
+    Game &game = getGame();
     if (showGlow)
     {
         glowTimer += GetFrameTime();
@@ -556,7 +561,9 @@ void UpdateGame(void)
 void DrawGame(float gameTime)
 {
     BeginDrawing();
-    switch (gameState)
+
+    Game &game = getGame();
+    switch (game.gameState)
     {
     case HOME: {
         DrawTexturePro(battleshipBackground,
