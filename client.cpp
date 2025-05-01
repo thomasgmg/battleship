@@ -5,7 +5,9 @@
 #include <stdio.h>
 #include <string>
 #include <sys/socket.h>
+#include <thread>
 #include <unistd.h>
+#include <stdio.h>
 
 #include "client.h"
 #include "fleet.h"
@@ -16,6 +18,12 @@ using namespace std;
 
 int sock = -1;
 
+// func declarations
+
+void attackLoop();
+
+// -------------------------
+
 string waitForResponse(void)
 {
     const int BUFFER_SIZE = 1024;
@@ -23,7 +31,13 @@ string waitForResponse(void)
 
     // Receive server response
     int bytes_received = recv(sock, buffer, BUFFER_SIZE - 1, 0);
-    if (bytes_received <= 0)
+    if(bytes_received == 0) 
+    {
+        printf("server closed socket, cleaning up on our side...\n");
+        close(sock);
+        return string();
+    }
+    if (bytes_received < 0)
     {
         perror("Receive failed");
         exit(1);
@@ -158,25 +172,84 @@ void sendFleet(Fleet const &fleet)
         exit(1);
     }
 
-    getGame().gameState = WAITING_FOR_TURN;
+    if (getPlayer().code == "P1")
+    {
+        getGame().gameState = ATTACKING;
+    }
+    else
+    {
+        getGame().gameState = WAITING_FOR_TURN;
+    }
+
+    thread t(attackLoop);
+    t.detach();
 }
 
-void waitForTurn(void)
+void attackLoop(void)
 {
+    // TODO temporary
+    static int x = 0;
+    static int y = 0;
+
     while (true)
     {
-        printf("waiting for turn\n");
-        string turn = waitForResponse();
-        vector<string> tokens = split(turn);
+        string message = waitForResponse();
+        printf("client received message: %s\n", message.c_str());
 
-        string playerCode = tokens[1];
-        printf("Turn of %s\n", playerCode.c_str());
+        if(message.empty())
+        {
+            printf("server disconnected, exiting attack loop\n");
+            break;
+        }
 
-        if (playerCode == getPlayer().code)
+        vector<string> tokens = split(message);
+        if (tokens[0] == "TURN" && tokens[1] == getPlayer().code)
         {
             getGame().gameState = ATTACKING;
+
+            for (int i = 0; i != 3; ++i) 
+            {
+                char attack_ctr[32];
+                
+                message = sendMessage(string(attack_ctr , sprintf(attack_ctr, "ATTACK %d %d", x, y++)));
+                printf("attack result: %s", message.c_str());
+
+                if (tokens[0] == "WIN")
+                {
+                    printf("Game over\n");
+                    getGame().gameState = GAME_OVER;
+                    continue; // wait for close socket "response"
+                }
+                if (y == 10)
+                {
+                    y = 0;
+                    ++x;
+                }
+                if(x == 10) 
+                {
+                    printf("this shouldn't happen, exiting loop\n");
+                    return;
+                }
+            }
+
+            getGame().gameState = WAITING_FOR_TURN;
+        }
+        else if (tokens[0] == "TURN")
+        {
+            printf("waiting for turn\n");
+            getGame().gameState = WAITING_FOR_TURN;
+            // TODO save the shot somewhere and show in the GUI
+        }
+
+        else if (tokens[0] == "WIN") {
+            printf("Game over\n");
+            getGame().gameState = GAME_OVER;
+            continue; // wait for close socket "response"
+            
         }
     }
+
+    printf("exiting attack loop thread\n");
 }
 
 void connectToServer(string const &serverIp, int serverPort)
@@ -195,13 +268,5 @@ void connectToServer(string const &serverIp, int serverPort)
         close(sock);
         sock = -1;
         exit(EXIT_FAILURE);
-    }
-}
-
-void disconnectFromServer()
-{
-    if (sock != -1)
-    {
-        close(sock);
     }
 }

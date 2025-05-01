@@ -132,8 +132,10 @@ int main(int argc, char *argv[])
 
             game.gameState = SENDING_FLEET;
             // sendFleet(getFleet());
+            printf("creating thread\n");
             thread t(sendFleet, ref(getFleet()));
             t.detach();
+            printf("thread created\n");
 
             // // TODO do this only when server sends START ...
             // game.gameState = PLAYING;
@@ -147,15 +149,18 @@ int main(int argc, char *argv[])
         }
 
         case WAITING_FOR_TURN: {
+            // printf("waiting for turn\n");
             break;
         }
 
         case ATTACKING: {
+            // printf("attacking\n");
             getAttackCoordinates();
             break;
         }
 
         case PLAYING: {
+            printf("PLAYING\n");
             if (IsKeyPressed(KEY_H))
             {
                 game.gameState = HOME;
@@ -547,7 +552,7 @@ void UpdateGame(void)
         showGrid = !showGrid;
     }
 
-    Game &game = getGame();
+    // Game &game = getGame();
     if (showGlow)
     {
         glowTimer += GetFrameTime();
@@ -591,10 +596,11 @@ void DrawGame(float gameTime)
         break;
     }
 
-    case NEW_GAME: {
-    }
-
-    case PLAYING: {
+    case NEW_GAME:
+    case SENDING_FLEET:
+    case PLAYING:
+    case ATTACKING:
+    case WAITING_FOR_TURN: {
         ClearBackground(BLUE);
         DrawGrid();
         DrawOpponentGrid();

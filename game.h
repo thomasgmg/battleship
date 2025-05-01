@@ -13,7 +13,8 @@ enum GameState
     WAITING_FOR_TURN,
     ATTACKING,
     SENDING_FLEET,
-    PLAYING
+    PLAYING,
+    GAME_OVER
 };
 
 struct Player
