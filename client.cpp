@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <netinet/in.h>
@@ -7,8 +8,8 @@
 #include <sys/socket.h>
 #include <thread>
 #include <unistd.h>
-#include <stdio.h>
 
+#include "attack.h"
 #include "client.h"
 #include "fleet.h"
 #include "game.h"
@@ -20,7 +21,7 @@ int sock = -1;
 
 // func declarations
 
-void attackLoop();
+void attackLoop(void);
 
 // -------------------------
 
@@ -31,7 +32,7 @@ string waitForResponse(void)
 
     // Receive server response
     int bytes_received = recv(sock, buffer, BUFFER_SIZE - 1, 0);
-    if(bytes_received == 0) 
+    if (bytes_received == 0)
     {
         printf("server closed socket, cleaning up on our side...\n");
         close(sock);
@@ -185,18 +186,30 @@ void sendFleet(Fleet const &fleet)
     t.detach();
 }
 
+string sendAttack(void)
+{
+    string message = getAttackCoordinates();
+    vector<string> tokens = split(message);
+
+    char attack_ctr[32];
+
+    message = sendMessage(string(attack_ctr, sprintf(attack_ctr, "Attack: %s\n", getAttackCoordinates().c_str())));
+
+    return getAttackCoordinates();
+}
+
 void attackLoop(void)
 {
-    // TODO temporary
-    static int x = 0;
-    static int y = 0;
+    // // TODO temporary
+    // static int x = 0;
+    // static int y = 0;
 
     while (true)
     {
         string message = waitForResponse();
         printf("client received message: %s\n", message.c_str());
 
-        if(message.empty())
+        if (message.empty())
         {
             printf("server disconnected, exiting attack loop\n");
             break;
@@ -207,30 +220,31 @@ void attackLoop(void)
         {
             getGame().gameState = ATTACKING;
 
-            for (int i = 0; i != 3; ++i) 
+            // for (int i = 0; i != 3; ++i)
+            // {
+            //     char attack_ctr[32];
+            //
+            //     message = sendMessage(string(attack_ctr , sprintf(attack_ctr, "ATTACK %d %d", x, y++)));
+            //     printf("attack result: %s", message.c_str());
+            //
+            if (tokens[0] == "WIN")
             {
-                char attack_ctr[32];
-                
-                message = sendMessage(string(attack_ctr , sprintf(attack_ctr, "ATTACK %d %d", x, y++)));
-                printf("attack result: %s", message.c_str());
-
-                if (tokens[0] == "WIN")
-                {
-                    printf("Game over\n");
-                    getGame().gameState = GAME_OVER;
-                    continue; // wait for close socket "response"
-                }
-                if (y == 10)
-                {
-                    y = 0;
-                    ++x;
-                }
-                if(x == 10) 
-                {
-                    printf("this shouldn't happen, exiting loop\n");
-                    return;
-                }
+                printf("Game over\n");
+                getGame().gameState = GAME_OVER;
+                continue; // wait for close socket "response"
             }
+            //     if (y == 10)
+            //     {
+            //         y = 0;
+            //         ++x;
+            //     }
+            //     if(x == 10)
+            //     {
+            //         printf("this shouldn't happen, exiting loop\n");
+            //         return;
+            //     }
+            // }
+            printf("attack result: %s", sendAttack().c_str());
 
             getGame().gameState = WAITING_FOR_TURN;
         }
@@ -241,11 +255,11 @@ void attackLoop(void)
             // TODO save the shot somewhere and show in the GUI
         }
 
-        else if (tokens[0] == "WIN") {
+        else if (tokens[0] == "WIN")
+        {
             printf("Game over\n");
             getGame().gameState = GAME_OVER;
             continue; // wait for close socket "response"
-            
         }
     }
 

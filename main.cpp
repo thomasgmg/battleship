@@ -5,6 +5,7 @@
 #include <ctime>
 #include <thread>
 
+#include "attack.h"
 #include "client.h"
 #include "fleet.h"
 #include "game.h"
@@ -28,14 +29,6 @@ int const screenWidth = 1250;
 int const screenHeight = 700;
 
 // Attacking related declarations
-int attackCount = 0;
-int const MAX_ATTACKS = 3;
-
-bool showGlow = false;
-int glowGridX = -1;
-int glowGridY = -1;
-float glowTimer = 0.0f;
-float const GLOW_DURATION = 1.5f;
 
 // Themes
 bool isDarkBackground = true;
@@ -68,8 +61,6 @@ void placeShip(Ship ship);
 void distributeFleet(void);
 void initFleet(void);
 void resetGrid(void);
-void getAttackCoordinates(void);
-void showClickedGridBlock(void);
 
 int main(int argc, char *argv[])
 {
@@ -120,7 +111,7 @@ int main(int argc, char *argv[])
         }
 
         case NEW_GAME: {
-            disconnectFromServer();
+            // disconnectFromServer();
             connectToServer(ip, port);
 
             resetGrid();
@@ -155,6 +146,11 @@ int main(int argc, char *argv[])
 
         case ATTACKING: {
             // printf("attacking\n");
+            if (attackCount >= MAX_ATTACKS)
+            {
+                attackCount = 0;
+                getGame().gameState = WAITING_FOR_TURN;
+            }
             getAttackCoordinates();
             break;
         }
@@ -167,63 +163,22 @@ int main(int argc, char *argv[])
             }
             break;
         }
+        case GAME_OVER: {
+            if (IsKeyPressed(KEY_H))
+            {
+                getGame().gameState = HOME;
+            }
+            break;
+        }
         }
         UpdateGame();
         DrawGame(gameTime);
     }
 
-    disconnectFromServer();
+    // disconnectFromServer();
     UnloadGame();
     CloseWindow();
     return 0;
-}
-
-void getAttackCoordinates(void)
-{
-    if (attackCount >= MAX_ATTACKS)
-    {
-        return;
-    }
-
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-    {
-        Vector2 mousePoint = GetMousePosition();
-
-        // Define the opponent's grid rectangle
-        Rectangle opponentGridRect = {(float)GRID_OPPONENT_OFFSET_X, (float)GRID_OPPONENT_OFFSET_Y,
-                                      (float)(GRID_HORIZONTAL_SIZE * BLOCK_SIZE),
-                                      (float)(GRID_VERTICAL_SIZE * BLOCK_SIZE)};
-
-        if (CheckCollisionPointRec(mousePoint, opponentGridRect))
-        {
-            int gridX = (int)((mousePoint.x - GRID_OPPONENT_OFFSET_X) / BLOCK_SIZE);
-            int gridY = (int)((mousePoint.y - GRID_OPPONENT_OFFSET_Y) / BLOCK_SIZE);
-
-            if (gridX >= 0 && gridX < GRID_HORIZONTAL_SIZE && gridY >= 0 && gridY < GRID_VERTICAL_SIZE)
-            {
-                attackCount++;
-                //  print coordinates (temporary)
-                printf("Attack coordinates: (%d, %d)\n", gridX, gridY);
-                // Example: sendAttack(gridX, gridY);
-
-                showGlow = true;
-                glowGridX = gridX;
-                glowGridY = gridY;
-                glowTimer = 0.0f;
-            }
-        }
-    }
-}
-
-void showClickedGridBlock(void)
-{
-    if (showGlow && glowGridX >= 0 && glowGridX < GRID_HORIZONTAL_SIZE && glowGridY >= 0 &&
-        glowGridY < GRID_VERTICAL_SIZE)
-    {
-        int glowX = GRID_OPPONENT_OFFSET_X + glowGridX * BLOCK_SIZE;
-        int glowY = GRID_OPPONENT_OFFSET_Y + glowGridY * BLOCK_SIZE;
-        DrawRectangle(glowX, glowY, BLOCK_SIZE, BLOCK_SIZE, (Color){255, 255, 0, 100});
-    }
 }
 
 void resetGrid(void)
@@ -541,8 +496,6 @@ void DrawOpponentGrid(void)
                35, 1, BLACK);
 
     DrawCoordinates(GRID_OPPONENT_OFFSET_X, GRID_OPPONENT_OFFSET_Y);
-
-    showClickedGridBlock();
 }
 
 void UpdateGame(void)
@@ -550,16 +503,6 @@ void UpdateGame(void)
     if (IsKeyPressed(KEY_G))
     {
         showGrid = !showGrid;
-    }
-
-    // Game &game = getGame();
-    if (showGlow)
-    {
-        glowTimer += GetFrameTime();
-        if (glowTimer >= GLOW_DURATION)
-        {
-            showGlow = false;
-        }
     }
 }
 
@@ -605,6 +548,15 @@ void DrawGame(float gameTime)
         DrawGrid();
         DrawOpponentGrid();
         DrawFleet();
+        break;
+    }
+    case GAME_OVER: {
+        ClearBackground(BLACK);
+
+        DrawTextEx(font, "GAME OVER",
+                   (Vector2){(float)GetScreenWidth() / 2 - MeasureTextEx(font, "GAME OVER", 30, 1).x,
+                             (float)GetScreenHeight() / 2},
+                   30, 1, Fade(WHITE, 0.4f));
         break;
     }
     }
