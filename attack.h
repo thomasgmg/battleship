@@ -5,7 +5,7 @@
 
 #include "game.h"
 
-string getAttackCoordinates(void);
+void getAttackCoordinates(void);
 void showClickedGridBlock(void);
 
 #endif 

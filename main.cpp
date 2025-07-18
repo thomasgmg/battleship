@@ -29,6 +29,14 @@ int const screenWidth = 1250;
 int const screenHeight = 700;
 
 // Attacking related declarations
+bool showGlow = false;
+int glowGridX = -1;
+int glowGridY = -1;
+float glowTimer = 0.0f;
+float const GLOW_DURATION = 1.5f;
+
+int attackCount = 0;
+int const MAX_ATTACKS = 3;
 
 // Themes
 bool isDarkBackground = true;
@@ -93,6 +101,10 @@ int main(int argc, char *argv[])
     font = LoadFontEx("resources/font.ttf", 96, 0, 0);
 
     initFleet();
+
+    PlayMusicStream(backgroundMusic);
+    isMusicPlaying = true;
+
     while (!WindowShouldClose())
     {
         UpdateMusicStream(backgroundMusic);
@@ -129,9 +141,6 @@ int main(int argc, char *argv[])
             printf("thread created\n");
 
             // // TODO do this only when server sends START ...
-            // game.gameState = PLAYING;
-            // PlayMusicStream(backgroundMusic);
-            // isMusicPlaying = true;
             break;
         }
 
@@ -146,11 +155,11 @@ int main(int argc, char *argv[])
 
         case ATTACKING: {
             // printf("attacking\n");
-            if (attackCount >= MAX_ATTACKS)
-            {
-                attackCount = 0;
-                getGame().gameState = WAITING_FOR_TURN;
-            }
+            // if (attackCount >= MAX_ATTACKS)
+            // {
+            //     attackCount = 0;
+            //     getGame().gameState = WAITING_FOR_TURN;
+            // }
             getAttackCoordinates();
             break;
         }
@@ -191,6 +200,57 @@ void resetGrid(void)
             grid[y][x] = 0;
         }
     }
+}
+
+void getAttackCoordinates(void)
+{
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+    {
+        Vector2 mousePoint = GetMousePosition();
+
+        Rectangle opponentGridRect = {(float)GRID_OPPONENT_OFFSET_X, (float)GRID_OPPONENT_OFFSET_Y,
+                                      (float)(GRID_HORIZONTAL_SIZE * BLOCK_SIZE),
+                                      (float)(GRID_VERTICAL_SIZE * BLOCK_SIZE)};
+
+        if (CheckCollisionPointRec(mousePoint, opponentGridRect))
+        {
+            int gridX = (int)((mousePoint.x - GRID_OPPONENT_OFFSET_X) / BLOCK_SIZE);
+            int gridY = (int)((mousePoint.y - GRID_OPPONENT_OFFSET_Y) / BLOCK_SIZE);
+
+            if (gridX >= 0 && gridX < GRID_HORIZONTAL_SIZE && gridY >= 0 && gridY < GRID_VERTICAL_SIZE)
+            {
+                attackCount++;
+                printf("Attack coordinates: (%d, %d)\n", gridX, gridY);
+                // Example: sendAttack(gridX, gridY);
+
+                showGlow = true;
+                glowGridX = gridX;
+                glowGridY = gridY;
+                glowTimer = 0.0f;
+            }
+        }
+    }
+    showClickedGridBlock();
+}
+
+void showClickedGridBlock(void)
+{
+    if (showGlow && glowGridX >= 0 && glowGridX < GRID_HORIZONTAL_SIZE && glowGridY >= 0 &&
+        glowGridY < GRID_VERTICAL_SIZE)
+    {
+        int glowX = GRID_OPPONENT_OFFSET_X + glowGridX * BLOCK_SIZE;
+        int glowY = GRID_OPPONENT_OFFSET_Y + glowGridY * BLOCK_SIZE;
+        DrawRectangle(glowX, glowY, BLOCK_SIZE, BLOCK_SIZE, (Color){255, 255, 0, 100});
+    }
+
+    // if (showGlow)
+    // {
+    //     glowTimer += GetFrameTime();
+    //     if (glowTimer >= GLOW_DURATION)
+    //     {
+    //         showGlow = false;
+    //     }
+    // }
 }
 
 // Ships functions
@@ -503,6 +563,11 @@ void UpdateGame(void)
     if (IsKeyPressed(KEY_G))
     {
         showGrid = !showGrid;
+    }
+    if (attackCount >= MAX_ATTACKS)
+    {
+        attackCount = 0;
+        getGame().gameState = WAITING_FOR_TURN;
     }
 }
 

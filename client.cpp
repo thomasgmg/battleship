@@ -9,7 +9,7 @@
 #include <thread>
 #include <unistd.h>
 
-#include "attack.h"
+// #include "attack.h"
 #include "client.h"
 #include "fleet.h"
 #include "game.h"
@@ -186,17 +186,6 @@ void sendFleet(Fleet const &fleet)
     t.detach();
 }
 
-string sendAttack(void)
-{
-    string message = getAttackCoordinates();
-    vector<string> tokens = split(message);
-
-    char attack_ctr[32];
-
-    message = sendMessage(string(attack_ctr, sprintf(attack_ctr, "Attack: %s\n", getAttackCoordinates().c_str())));
-
-    return getAttackCoordinates();
-}
 
 void attackLoop(void)
 {
@@ -244,7 +233,6 @@ void attackLoop(void)
             //         return;
             //     }
             // }
-            printf("attack result: %s", sendAttack().c_str());
 
             getGame().gameState = WAITING_FOR_TURN;
         }
